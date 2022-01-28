@@ -3,12 +3,7 @@
 
 //---Récupere les informations dans le local storage
 ProduitsDansLeLocalStorage = JSON.parse(localStorage.getItem("products")); // "JSON.parse" convert du JSON en objetc Js
-
-
 console.log(ProduitsDansLeLocalStorage);
-// fonction qui permert de récupérer le prix dans l'api en fonction de chaque produits individuellement
-
-
 
 
 //-----------------1.Fonction intégration et création du block Html

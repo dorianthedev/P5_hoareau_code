@@ -3,8 +3,15 @@
 
 //---Récupere les informations dans le local storage
 ProduitsDansLeLocalStorage = JSON.parse(localStorage.getItem("products")); // "JSON.parse" convert du JSON en objetc Js
-console.log(ProduitsDansLeLocalStorage);
 
+async function getPrice(id) {
+    return fetch('http://localhost:3000/api/products/'+ id)
+        .then(response => response.json())
+        .then(product => {
+            return product.price
+        })
+        .catch((err) => console.error(err))
+}
 
 //-----------------1.Fonction intégration et création du block Html
 // -------------------et récup valeurs dans le local storage---------------
@@ -20,27 +27,28 @@ function creationBlockHtmlPanier() {     // fonctions réutilisable
                     createBlockArticle.dataset.id = productPourLePanier.idProduit;
                     createBlockArticle.dataset.color = productPourLePanier.color;
 
-                
-                    createBlockArticle.innerHTML = `
-                                <div class="cart__item__img">
-                                    <img src="${productPourLePanier.img}" alt="${productPourLePanier.altTxt}">
-                                    </div>
-                                    <div class="cart__item__content">
-                                    <div class="cart__item__content__description">
-                                        <h2>${productPourLePanier.title}</h2>
-                                        <p>${productPourLePanier.color}</p>
-                                        <p>${productPourLePanier.price} €</p>
-                                    </div>
-                                    <div class="cart__item__content__settings">         
-                                        <div class="cart__item__content__settings__quantity">
-                                        <p>Qté :</p>
-                                        <input type="number" class="itemQuantity" name="itemQuantity" min="1" max="100" value="${productPourLePanier.quantity}">
+                    getPrice(productPourLePanier.idProduit).then((price) => {
+                        createBlockArticle.innerHTML = `
+                                    <div class="cart__item__img">
+                                        <img src="${productPourLePanier.img}" alt="${productPourLePanier.altTxt}">
                                         </div>
-                                        <div class="cart__item__content__settings__delete">
-                                        <p class="deleteItem">Supprimer</p>
+                                        <div class="cart__item__content">
+                                        <div class="cart__item__content__description">
+                                            <h2>${productPourLePanier.title}</h2>
+                                            <p>${productPourLePanier.color}</p>
+                                            <p>${productPourLePanier.price} €</p>
                                         </div>
-                                    </div>
-                                </div> `;
+                                        <div class="cart__item__content__settings">         
+                                            <div class="cart__item__content__settings__quantity">
+                                            <p>Qté :</p>
+                                            <input type="number" class="itemQuantity" name="itemQuantity" min="1" max="100" value="${productPourLePanier.quantity}">
+                                            </div>
+                                            <div class="cart__item__content__settings__delete">
+                                            <p class="deleteItem">Supprimer</p>
+                                            </div>
+                                        </div>
+                                    </div> `;
+                    })
             
         
         
@@ -71,14 +79,39 @@ afficheProduitsDanslePanier();
 
 const afficheLePrixTotalDeTousLesArticles = async () => {
 
-    let totalPrixProduit = ProduitsDansLeLocalStorage.reduce(
-        (totalPrice, products) => {
-            return totalPrice + products.quantity *  products.price;
-        },
-        0
-        );
-        //- Affiche le prix total des articles
-        document.querySelector("#totalPrice").innerHTML = totalPrixProduit;
+    if (ProduitsDansLeLocalStorage !== null) {  // sinon error dans la console si le panier est vide
+
+        let arrayResultats = new Array();
+
+        ProduitsDansLeLocalStorage.forEach((chaqueTourLc) => {
+
+            console.log(chaqueTourLc.quantity);
+
+            getPrice(chaqueTourLc.idProduit).then((price) => {
+
+                return chaqueTourLc.quantity * price;
+            })
+            .then((total) => {
+                arrayResultats.push(total)
+
+            })
+                
+        })
+            
+        await getPrice();
+        let sum = 0
+        console.log(arrayResultats)
+        for ( let i of arrayResultats ) {
+            sum += parseInt(i)
+        }
+    
+        
+        document.querySelector("#totalPrice").innerHTML = sum;
+        
+        
+    } else {
+        document.querySelector("#totalPrice").innerHTML = "0";
+    }
 
 }
 //-----------------5.Fonction calcul le nombre total de tous le sarticles dans le panier--------------
@@ -101,6 +134,7 @@ afficheLeNombreDarticlesTotal();
 //-----------------6.Supprime les produits individuellement---------------
 
 const deleteProductIndiv = async () => {
+    window.addEventListener('load', () => {
 
         
         const classBouttonSupprimer = document.querySelectorAll(".deleteItem");
@@ -123,6 +157,7 @@ const deleteProductIndiv = async () => {
                     alert ("Ce produit a été supprimé du panier");
                     afficheLePrixTotalDeTousLesArticles();
                     afficheLeNombreDarticlesTotal();
+                    location.reload()
                     
                     if (ProduitsDansLeLocalStorage == null || ProduitsDansLeLocalStorage == 0){
                         location.reload();
@@ -130,6 +165,7 @@ const deleteProductIndiv = async () => {
                     
                 });
             });
+    })
 
 }
 deleteProductIndiv();
@@ -137,37 +173,40 @@ deleteProductIndiv();
 
 //-----------------7.modofie la quantite individuellement---------------
 //=== Permet de modifie la quantité du produit et enregistre la modification dans le local storage ===//
+
 const modifQuantityIndiv = async () => {
+    window.addEventListener('load', () => {
+
+        const inputQuantitee = document.querySelectorAll(".itemQuantity");
+        inputQuantitee.forEach((quantityLink) => {
+            quantityLink.addEventListener("change", (ec) => {
+                ec.preventDefault();
+
+                //- Récupèrer l'id et la couleur du produit à modifier
+                const quantiteDuProduitAaModifier = ec.target.closest(".cart__item");
+                const productToModifId = quantiteDuProduitAaModifier.dataset.id;
+                const productToModifColor = quantiteDuProduitAaModifier.dataset.color;
+                //- Modifie la quantité dans le local storage
+                const productTuUpdate = ProduitsDansLeLocalStorage.find((product) => product.idProduit === productToModifId &&
+                product.color === productToModifColor);
 
 
-    const inputQuantitee = document.querySelectorAll(".itemQuantity");
-    inputQuantitee.forEach((quantityLink) => {
-        quantityLink.addEventListener("change", (ec) => {
-            ec.preventDefault();
+                const quantityMin = ec.target.closest(".itemQuantity");
+                    if (quantityMin.value < 1) {
+                    alert("Veuillez indiquer une valeur positive");
+                    } else if (quantityMin.value > 100){
+                        alert("Veuillez indiquer une valeur entre 1 et 100");
+                    }else {
+                    productTuUpdate.quantity = ec.target.valueAsNumber;
+                    localStorage.setItem("products", JSON.stringify(ProduitsDansLeLocalStorage));
+                    }//- Mise à jour du prix et du nombre d'article
+                    afficheLePrixTotalDeTousLesArticles();
+                    afficheLeNombreDarticlesTotal();
+                    location.reload()
 
-            //- Récupèrer l'id et la couleur du produit à modifier
-            const quantiteDuProduitAaModifier = ec.target.closest(".cart__item");
-            const productToModifId = quantiteDuProduitAaModifier.dataset.id;
-            const productToModifColor = quantiteDuProduitAaModifier.dataset.color;
-            //- Modifie la quantité dans le local storage
-            const productTuUpdate = ProduitsDansLeLocalStorage.find((product) => product.idProduit === productToModifId &&
-            product.color === productToModifColor);
-
-
-            const quantityMin = ec.target.closest(".itemQuantity");
-                if (quantityMin.value < 1) {
-                alert("Veuillez indiquer une valeur positive");
-                } else if (quantityMin.value > 100){
-                    alert("Veuillez indiquer une valeur entre 1 et 100");
-                }else {
-                productTuUpdate.quantity = ec.target.valueAsNumber;
-                localStorage.setItem("products", JSON.stringify(ProduitsDansLeLocalStorage));
-                }//- Mise à jour du prix et du nombre d'article
-                afficheLePrixTotalDeTousLesArticles();
-                afficheLeNombreDarticlesTotal();
-
+            });
         });
-    });
+    })
 }
 
 modifQuantityIndiv();

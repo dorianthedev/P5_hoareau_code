@@ -36,7 +36,7 @@ function creationBlockHtmlPanier() {     // fonctions réutilisable
                                         <div class="cart__item__content__description">
                                             <h2>${productPourLePanier.title}</h2>
                                             <p>${productPourLePanier.color}</p>
-                                            <p>${productPourLePanier.price} €</p>
+                                            <p>${price} €</p>
                                         </div>
                                         <div class="cart__item__content__settings">         
                                             <div class="cart__item__content__settings__quantity">

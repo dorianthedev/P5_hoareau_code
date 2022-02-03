@@ -66,7 +66,7 @@ const recupChoixProduitsUtilisateur= () => {    //fonction reutilisables
         img: document.querySelector(".item__img img").getAttribute("src"),
         altTxt: document.querySelector(".item__img img").getAttribute("alt"),
         idProduit: idProduitUrl,
-        price: document.querySelector("#price").textContent,
+        // price: document.querySelector("#price").textContent,
         color: document.querySelector("#colors").value,
         quantity: parseInt(quantityProduct.value),
     };
